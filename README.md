@@ -36,7 +36,7 @@ No tearing down the player at the end of every video.
 ## How it works
 
 ```mermaid
-flowchart LR
+flowchart TD
     USB[USB drive] --> Import[PiPresent\nvalidate + import]
     Import --> Cache[Local cache]
     Cache --> Route{Content router}

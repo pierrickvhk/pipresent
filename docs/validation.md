@@ -14,7 +14,7 @@ Local verification on 2026-09-27, macOS arm64, Python 3.14.0:
 | Doctor with writable workspace XDG paths | Directory checks PASS; no display/cache warnings expected |
 | `sh -n` for installer, uninstaller and start launcher | PASS |
 | Installer config lifecycle with mocked package installation | PASS; preserves unrelated autostart and cached data |
-| GitHub Actions | Release-polish run pending; see live workflow and the follow-up record below |
+| GitHub Actions | PASS: all six jobs in release-polish run [36352949119](https://github.com/pierrickvhk/pipresent/actions/runs/36352949119) |
 | Raspberry Pi/Linux installer and actual media playback | MANUAL RASPBERRY PI TEST REQUIRED |
 
 The first doctor run also reported sandbox-denied home-directory writes; a second run used
@@ -45,3 +45,14 @@ preservation of previous data on sync/replacement failures. No Windows jobs were
 
 The public README was redesigned; the technical and Dutch guides retain operational detail.
 The CI badge points at the actual `main` workflow. Raspberry Pi acceptance remains outstanding.
+
+Release-polish commit `c11bf1cd814896fe7ce1a54b38992598544a07a5` passed all six jobs in
+[run 36352949119](https://github.com/pierrickvhk/pipresent/actions/runs/36352949119):
+Linux, macOS and Windows × Python 3.11 and 3.13. Each job ran Ruff lint/format, mypy,
+all 69 tests and CLI help. This verifies the Windows fixes on actual Windows runners.
+
+The GitHub-rendered README was inspected for headings, badges, links, callouts and Mermaid
+rendering. The diagram was changed to a vertical layout for narrow-screen readability.
+Repository description and all eight requested topics were applied through GitHub's API.
+The [live workflow](https://github.com/pierrickvhk/pipresent/actions/workflows/ci.yml) reports
+checks for subsequent documentation-only commits; hardware status remains unchanged.
