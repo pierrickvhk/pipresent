@@ -1,5 +1,6 @@
 """Deterministic mounted-media discovery and transactional local imports."""
 
+import filecmp
 import getpass
 import json
 import logging
@@ -61,6 +62,19 @@ def load_cached(paths: AppPaths) -> tuple[Path, Config]:
 def import_content(source: Path, paths: AppPaths) -> tuple[Path, Config]:
     media, config = select_content(source)
     paths.ensure()
+    previous: Path | None = None
+    try:
+        cached, cached_config = load_cached(paths)
+        previous = cached.parent
+        if (
+            cached.name == media.name
+            and cached_config.slide_duration == config.slide_duration
+            and filecmp.cmp(media, cached, shallow=False)
+        ):
+            logging.info("USB content unchanged; using existing local import")
+            return cached, cached_config
+    except (PiPresentError, OSError):
+        pass
     imports = paths.data / "imports"
     imports.mkdir(exist_ok=True)
     generation = uuid.uuid4().hex
@@ -98,6 +112,20 @@ def import_content(source: Path, paths: AppPaths) -> tuple[Path, Config]:
         if pointer is not None:
             pointer.unlink(missing_ok=True)
         raise
+    # Keep the active and previous imports. Cleanup failure must not undo a committed import.
+    for old in imports.iterdir():
+        if (
+            old != target
+            and old != previous
+            and not old.is_symlink()
+            and old.is_dir()
+            and len(old.name) == 32
+            and all(c in "0123456789abcdef" for c in old.name)
+        ):
+            try:
+                shutil.rmtree(old)
+            except OSError:
+                logging.warning("Could not remove old import: %s", old)
     logging.info("Content imported locally: %s", target / media.name)
     return target / media.name, Config(media.name, config.slide_duration)
 

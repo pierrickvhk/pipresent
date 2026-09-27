@@ -46,6 +46,7 @@ def test_import_survives_usb_removal(tmp_path: Path, paths: AppPaths) -> None:
 def test_failed_copy_preserves_cache(tmp_path: Path, paths: AppPaths) -> None:
     drive = source(tmp_path)
     previous = import_content(drive, paths)
+    (drive / "talk.mp4").write_bytes(b"replacement video")
     with patch("pipresent.loader.shutil.copyfile", side_effect=OSError("disk full")):
         with pytest.raises(OSError, match="disk full"):
             import_content(drive, paths)
@@ -82,3 +83,29 @@ def test_wait_for_late_mount(tmp_path: Path) -> None:
     ):
         assert discover_usb(tmp_path, 1) == drive
         sleep.assert_called_once()
+
+
+def test_unchanged_usb_reuses_import(tmp_path: Path, paths: AppPaths) -> None:
+    drive = source(tmp_path)
+    first = import_content(drive, paths)
+    assert import_content(drive, paths) == first
+    assert len(list((paths.data / "imports").iterdir())) == 1
+
+
+def test_keep_current_and_previous(tmp_path: Path, paths: AppPaths) -> None:
+    drive = source(tmp_path)
+    for i in range(4):
+        (drive / "talk.mp4").write_bytes(f"video {i}".encode())
+        import_content(drive, paths)
+    assert len(list((paths.data / "imports").iterdir())) == 2
+    assert load_cached(paths)[0].read_bytes() == b"video 3"
+
+
+def test_pointer_failure_preserves_cache(tmp_path: Path, paths: AppPaths) -> None:
+    drive = source(tmp_path)
+    first = import_content(drive, paths)
+    (drive / "talk.mp4").write_bytes(b"changed")
+    with patch("pipresent.loader.Path.replace", side_effect=OSError("replace failed")):
+        with pytest.raises(OSError, match="replace failed"):
+            import_content(drive, paths)
+    assert load_cached(paths) == first
