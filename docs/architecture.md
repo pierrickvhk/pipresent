@@ -22,7 +22,9 @@ scan, so a later-mounted second drive cannot be detected after playback starts.
 Each import lives in `data/pipresent/imports/<UUID>/` with its own normalized configuration.
 A plain `current` file holds only a validated UUID. A staged copy is checked for file size
 and source changes during copying, its files are flushed with fsync, then the staging directory
-is renamed and the active pointer is atomically replaced on the same filesystem.
+is renamed and the active pointer is atomically replaced on the same filesystem. Staged files
+are opened in non-truncating read/write mode for fsync compatibility on Windows. Installer
+configuration writes likewise flush and close their temporary file before atomic replacement.
 
 A failure before pointer replacement leaves the old pointer intact. Temporary files from
 ordinary exceptions are cleaned up. Identical content/configuration reuses the existing

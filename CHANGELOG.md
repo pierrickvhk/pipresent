@@ -2,6 +2,10 @@
 
 ## v0.1.0
 
+- Cross-platform durability fix: sync writable import descriptors and close installer temporary
+  files before atomic replacement, including Windows regression coverage.
+- Redesigned public README with separate Dutch and technical guides.
+
 - Deterministic mounted-USB ingestion with strict JSON configuration validation.
 - Staged local caching, unchanged-content reuse and previous-import retention.
 - PPTX support through headless LibreOffice and PDF support through Poppler.
@@ -13,4 +17,4 @@
 - Unit tests, Ruff, strict mypy and cross-platform GitHub Actions configuration.
 - Installation, architecture, troubleshooting and manual hardware acceptance documentation.
 
-Prepared locally; publication and Raspberry Pi hardware acceptance remain pending.
+Source published at https://github.com/pierrickvhk/pipresent. Raspberry Pi hardware acceptance remains pending.

@@ -7,14 +7,14 @@ Local verification on 2026-09-27, macOS arm64, Python 3.14.0:
 | `ruff check .` | PASS |
 | `ruff format --check .` | PASS |
 | `mypy src` (strict) | PASS, 14 application source files |
-| `pytest -q` | PASS, 65 tests |
+| `pytest -q` | PASS, 69 tests |
 | Regular package build/install in an isolated venv | PASS |
 | Installed `pipresent --help` | PASS |
 | Installed `pipresent doctor` | Correctly exits 1: mpv, LibreOffice and pdftoppm absent |
 | Doctor with writable workspace XDG paths | Directory checks PASS; no display/cache warnings expected |
 | `sh -n` for installer, uninstaller and start launcher | PASS |
 | Installer config lifecycle with mocked package installation | PASS; preserves unrelated autostart and cached data |
-| GitHub Actions | PENDING publication; workflow configured, not executed remotely |
+| GitHub Actions | Release-polish run pending; see live workflow and the follow-up record below |
 | Raspberry Pi/Linux installer and actual media playback | MANUAL RASPBERRY PI TEST REQUIRED |
 
 The first doctor run also reported sandbox-denied home-directory writes; a second run used
@@ -34,3 +34,14 @@ are mocked; no rendered visual output or physical USB/HDMI behaviour was verifie
 
 Complete [acceptance.md](acceptance.md) on a real Pi before deploying unattended or claiming
 hardware readiness. Publish with [publishing.md](publishing.md), then inspect the actual CI run.
+
+## Release-polish verification
+
+The previously published run [36352217400](https://github.com/pierrickvhk/pipresent/actions/runs/36352217400)
+passed Linux/macOS and failed both Windows jobs. The fixes retain fsync and atomic replacement:
+imports use writable descriptors, and installer temporary files close before replacement.
+Regression tests enforce writable descriptors, closed handles, unchanged file contents and
+preservation of previous data on sync/replacement failures. No Windows jobs were removed or skipped.
+
+The public README was redesigned; the technical and Dutch guides retain operational detail.
+The CI badge points at the actual `main` workflow. Raspberry Pi acceptance remains outstanding.

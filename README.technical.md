@@ -1,68 +1,18 @@
-# PiPresent
+# PiPresent — technical guide
 
-> Technical documentation and engineering reference for the PiPresent presentation player.
+[Project overview](README.md) · [Dutch user guide](README.nl.md) · [Architecture](docs/architecture.md)
 
-This file contains the full technical overview for developers and maintainers. For the internal team rollout and installation guide, see [README.md](README.md).
+Operational details and developer reference for Raspberry Pi OS Desktop. For the design
+rationale and conversion pipeline, see the architecture guide.
 
-![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue)
-![License: MIT](https://img.shields.io/badge/License-MIT-green)
-![Release](https://img.shields.io/badge/version-0.1.0-blue)
-
-Put a presentation on a USB drive, connect your Raspberry Pi to a display, and boot.
-PiPresent copies the presentation locally and plays it fullscreen in a loop. Once playback
-starts, safely eject the USB drive. On the next boot without USB, the last import plays again.
-
-**Target:** Raspberry Pi 4 or newer, Raspberry Pi OS 64-bit Desktop (Trixie), HDMI,
-and a Wayland/labwc desktop session. Recent Bookworm systems with labwc are also intended
-to work. Hardware verification is pending: **MANUAL RASPBERRY PI TEST REQUIRED**.
-
-## Why PiPresent?
-
-Repeatedly terminating and restarting a video player between loops can expose the desktop
-or a black interval. PiPresent starts **one mpv process** and delegates repetition to
-`--loop-file=inf`. Slides use one mpv playlist with `--loop-playlist=inf`.
-
-This avoids process restart gaps; it does not guarantee gapless decoding on every device,
-or remove black frames encoded in the source video. See the [mpv manual](https://mpv.io/manual/stable/).
-
-## Features
-
-- PPTX and PDF rendered into static slides; MP4, MKV and MOV played directly.
-- Strict USB selection, configurable slide duration, seven-second default mount wait.
-- Local imports with a staged copy and atomic active-cache pointer replacement.
-- Unchanged content reused; current and previous imports retained after successful updates.
-- No Python runtime dependencies; small, typed standard-library application.
-- Diagnostics, rotating application logs, installer, optional labwc autostart and uninstaller.
-
-## How it works
-
-```mermaid
-flowchart TD
-    USB[Mounted USB] --> Validate[Validate and select content]
-    Validate --> Copy[Stage local copy]
-    Copy --> Cache[Local import / active pointer]
-    Cache --> Router[Content router]
-    Router --> PPTX[PPTX]
-    PPTX --> LO[LibreOffice headless]
-    LO --> PDF[PDF]
-    Router --> PDF
-    PDF --> Poppler[pdftoppm]
-    Poppler --> Slides[Numerically ordered PNG slides]
-    Slides --> MPV[One persistent mpv process]
-    Router --> Video[MP4 / MKV / MOV]
-    Video --> MPV
-    MPV --> TV[Fullscreen looping on HDMI display]
-```
-
-See [architecture and tradeoffs](docs/architecture.md).
+**MANUAL RASPBERRY PI TEST REQUIRED.** See the [acceptance checklist](docs/acceptance.md).
 
 ## Quick start
 
-The repository is prepared locally but has not yet been published. After publication,
-replace `YOUR_GITHUB_OWNER` with the actual owner (see [publishing](docs/publishing.md)):
+Clone the public repository on your Raspberry Pi desktop:
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_OWNER/pipresent.git
+git clone https://github.com/pierrickvhk/pipresent.git
 cd pipresent
 ./scripts/install.sh --autostart
 ```
@@ -230,7 +180,7 @@ pipresent --help
 
 Tests use temporary directories and mock subprocesses; no Pi, USB, LibreOffice or GUI is
 required. GitHub Actions defines Linux/macOS/Windows jobs on Python 3.11 and 3.13.
-CI status is unverified until publication. See [release validation](docs/validation.md) and the
+Check the [live CI workflow](https://github.com/pierrickvhk/pipresent/actions/workflows/ci.yml) for the current result. See [release validation](docs/validation.md) and the
 [manual Pi acceptance checklist](docs/acceptance.md).
 
 ## Current limitations
@@ -246,18 +196,3 @@ CI status is unverified until publication. See [release validation](docs/validat
 - Staging needs disk space for an additional import and generated slides. Sudden power loss,
   SD-card damage and concurrent starts are outside the atomic-copy guarantee.
 - Content is processed by local desktop tools; use trusted presentations and keep the Pi updated.
-
-## Roadmap
-
-- v0.2: hot USB replacement, mixed playlists, scheduled content.
-- v0.3: lightweight local administration and remote health checks.
-- Future: multi-display fleet management.
-
-Built as an evening engineering project focused on automation, reliability and turning a real
-operational problem into a reusable Raspberry Pi tool.
-
-Pierrick Van Hoecke · AI & Automation Engineer
-
-## License
-
-[MIT](LICENSE) © 2026 Pierrick Van Hoecke.

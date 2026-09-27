@@ -1,4 +1,6 @@
-# PiPresent
+# PiPresent — Nederlandse gebruikershandleiding
+
+[Projectoverzicht](README.md) · [Technische documentatie](README.technical.md) · [Uitrolchecklist](docs/rollout.nl.md)
 
 > Zet een Raspberry Pi om naar een plug-and-play mediaspeler voor PowerPoint-, PDF- en videopresentaties.
 
@@ -9,7 +11,7 @@
 Plaats een presentatie op een USB-stick, sluit de Raspberry Pi aan op een scherm en zet deze aan.
 PiPresent kopieert de presentatie lokaal en speelt deze volledig schermvullend in een lus af. Zodra de weergave begint, kun je de USB-stick veilig verwijderen. Bij een volgende boot zonder USB-stick wordt de laatste geïmporteerde presentatie opnieuw afgespeeld.
 
-**Doel:** Raspberry Pi 4 of nieuwer, Raspberry Pi OS 64-bit Desktop (Trixie), HDMI en een Wayland/labwc desktopomgeving. Recente Bookworm-systemen met labwc zijn ook bedoeld om te werken. Hardwareverificatie is nog niet afgerond: **HANDMATIGE RASPBERRY PI-TEST VERPLICHT**.
+**Doel:** Raspberry Pi 4 of nieuwer, Raspberry Pi OS 64-bit Desktop (Trixie), HDMI en een Wayland/labwc desktopomgeving. Recente Bookworm-systemen met labwc zijn ook bedoeld om te werken. Hardwareverificatie is nog niet afgerond: **MANUAL RASPBERRY PI TEST REQUIRED**.
 
 ---
 
@@ -17,7 +19,7 @@ PiPresent kopieert de presentatie lokaal en speelt deze volledig schermvullend i
 
 Herhaaldelijk stoppen en opnieuw starten van een videospeler tussen lussen kan een zwart scherm of een korte onderbreking in de desktop tonen. PiPresent start een enkel `mpv`-proces en laat de herhaling over aan `--loop-file=inf`. Slides worden afgespeeld via een `mpv`-afspeellijst met `--loop-playlist=inf`.
 
-Zo wordt voorkomen dat het proces tussen loops opnieuw opstart; dit garandeert echter geen volledig naadloze decodering op elk apparaat en verwijderd ook geen zwarte frames die al in de bronvideo zijn ingebakken. Zie de [mpv-handleiding](https://mpv.io/manual/stable/).
+Zo wordt voorkomen dat het proces tussen loops opnieuw opstart; dit garandeert echter geen volledig naadloze decodering op elk apparaat en verwijdert ook geen zwarte frames die al in de bronvideo zijn ingebakken. Zie de [mpv-handleiding](https://mpv.io/manual/stable/).
 
 ---
 
@@ -58,10 +60,10 @@ Zie [architectuur en trade-offs](docs/architecture.md).
 
 ## Snelstart
 
-Het repository is lokaal voorbereid maar nog niet gepubliceerd. Vervang na publicatie `YOUR_GITHUB_OWNER` door de werkelijke eigenaar (zie [publishing](docs/publishing.md)):
+Kloon de publieke repository op je Raspberry Pi-desktop:
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_OWNER/pipresent.git
+git clone https://github.com/pierrickvhk/pipresent.git
 cd pipresent
 ./scripts/install.sh --autostart
 ```
@@ -210,7 +212,7 @@ pipresent --help
 
 Tests gebruiken tijdelijke directories en mock-subprocesses; er is geen Pi, USB, LibreOffice of GUI nodig.
 GitHub Actions definieert Linux/macOS/Windows-jobs op Python 3.11 en 3.13.
-CI-status is nog niet geverifieerd totdat publicatie plaatsvindt. Zie [release validation](docs/validation.md) en de [handmatige Pi-acceptatiechecklist](docs/acceptance.md).
+Bekijk de [actuele CI-status](https://github.com/pierrickvhk/pipresent/actions/workflows/ci.yml). Zie [release validation](docs/validation.md) en de [handmatige Pi-acceptatiechecklist](docs/acceptance.md).
 
 ---
 
