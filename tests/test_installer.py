@@ -44,3 +44,52 @@ def test_symlink_autostart_refused(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError, match="symlink"):
         update(link, tmp_path / "launcher", tmp_path / "log", True)
     assert real.read_text() == "untouched"
+
+
+def test_install_uninstall_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from unittest.mock import patch
+
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    for name, value in (
+        ("XDG_DATA_HOME", "data"),
+        ("XDG_CACHE_HOME", "cache"),
+        ("XDG_STATE_HOME", "state"),
+        ("XDG_CONFIG_HOME", "config"),
+    ):
+        monkeypatch.setenv(name, str(tmp_path / value))
+    autostart = tmp_path / "config/labwc/autostart"
+    autostart.parent.mkdir(parents=True)
+    autostart.write_text("unrelated-app &\n")
+    main = helpers["main"]
+    with (
+        patch("sys.argv", ["manage_install.py", "install", "--autostart"]),
+        patch("venv.EnvBuilder.create"),
+        patch("subprocess.run") as run,
+    ):
+        assert main() == 0
+        assert run.call_count == 2
+        assert all(call.kwargs["check"] for call in run.call_args_list)
+    launcher = tmp_path / ".local/bin/pipresent"
+    assert launcher.exists()
+    data = tmp_path / "data/pipresent/keep.pdf"
+    data.write_bytes(b"user presentation")
+    with patch("sys.argv", ["manage_install.py", "uninstall"]):
+        assert main() == 0
+    assert not launcher.exists()
+    assert not (tmp_path / "data/pipresent-app").exists()
+    assert data.read_bytes() == b"user presentation"
+    assert autostart.read_text() == "unrelated-app &\n"
+
+
+def test_unrelated_launcher_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from unittest.mock import patch
+
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    launcher = tmp_path / ".local/bin/pipresent"
+    launcher.parent.mkdir(parents=True)
+    launcher.write_text("user-owned script")
+    with patch("sys.argv", ["manage_install.py", "uninstall"]):
+        with pytest.raises(RuntimeError, match="unrelated launcher"):
+            helpers["main"]()
+    assert launcher.read_text() == "user-owned script"

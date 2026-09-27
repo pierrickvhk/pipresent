@@ -109,3 +109,20 @@ def test_pointer_failure_preserves_cache(tmp_path: Path, paths: AppPaths) -> Non
         with pytest.raises(OSError, match="replace failed"):
             import_content(drive, paths)
     assert load_cached(paths) == first
+
+
+def test_source_changes_during_copy(tmp_path: Path, paths: AppPaths) -> None:
+    import shutil
+
+    drive = source(tmp_path)
+    original_copy = shutil.copyfile
+
+    def changing_copy(source: Path, destination: Path) -> Path:
+        result = original_copy(source, destination)
+        source.write_bytes(b"modified during copy")
+        return result
+
+    with patch("pipresent.loader.shutil.copyfile", side_effect=changing_copy):
+        with pytest.raises(PiPresentError, match="changed during import"):
+            import_content(drive, paths)
+    assert not (paths.data / "current").exists()
