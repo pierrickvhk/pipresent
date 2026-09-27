@@ -1,6 +1,6 @@
 <div align="center">
 
-# PiPresent
+<img src="assets/pipresent-logo.png" alt="PiPresent logo" width="280">
 
 ### Plug in a USB. Boot the Pi. Let the presentation run.
 
