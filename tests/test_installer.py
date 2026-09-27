@@ -93,3 +93,43 @@ def test_unrelated_launcher_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPa
         with pytest.raises(RuntimeError, match="unrelated launcher"):
             helpers["main"]()
     assert launcher.read_text() == "user-owned script"
+
+
+def test_atomic_write_closes_before_replacement(tmp_path: Path) -> None:
+    import tempfile
+    from unittest.mock import patch
+
+    handles = []
+    real_temporary_file = tempfile.NamedTemporaryFile
+    real_replace = Path.replace
+
+    def temporary_file(*args: object, **kwargs: object) -> object:
+        handle = real_temporary_file(*args, **kwargs)
+        handles.append(handle)
+        return handle
+
+    def replace(source: Path, destination: Path) -> Path:
+        assert handles and all(handle.closed for handle in handles)
+        return real_replace(source, destination)
+
+    path = tmp_path / "autostart"
+    path.write_text("original")
+    with (
+        patch("tempfile.NamedTemporaryFile", side_effect=temporary_file),
+        patch.object(Path, "replace", replace),
+    ):
+        helpers["atomic_write"](path, "replacement")
+    assert path.read_text() == "replacement"
+    assert list(tmp_path.iterdir()) == [path]
+
+
+def test_atomic_write_failure_keeps_original(tmp_path: Path) -> None:
+    from unittest.mock import patch
+
+    path = tmp_path / "autostart"
+    path.write_text("original")
+    with patch.object(Path, "replace", side_effect=OSError("replace failed")):
+        with pytest.raises(OSError, match="replace failed"):
+            helpers["atomic_write"](path, "replacement")
+    assert path.read_text() == "original"
+    assert list(tmp_path.iterdir()) == [path]

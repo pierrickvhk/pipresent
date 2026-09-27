@@ -35,17 +35,20 @@ def atomic_write(path: Path, text: str, mode: int = 0o644) -> None:
     if path.is_symlink():
         raise RuntimeError(f"Refusing to overwrite a symlink: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(
-        mode="w", encoding="utf-8", dir=path.parent, delete=False
-    ) as f:
-        temporary = Path(f.name)
-        try:
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", dir=path.parent, delete=False
+        ) as f:
+            temporary = Path(f.name)
             f.write(text)
             f.flush()
             os.fsync(f.fileno())
-            temporary.chmod(mode)
-            temporary.replace(path)
-        finally:
+        # Windows cannot replace an open temporary file. Close after flushing first.
+        temporary.chmod(mode)
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
             temporary.unlink(missing_ok=True)
 
 

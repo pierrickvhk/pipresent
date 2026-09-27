@@ -126,3 +126,31 @@ def test_source_changes_during_copy(tmp_path: Path, paths: AppPaths) -> None:
         with pytest.raises(PiPresentError, match="changed during import"):
             import_content(drive, paths)
     assert not (paths.data / "current").exists()
+
+
+def test_import_syncs_writable_descriptors(tmp_path: Path, paths: AppPaths) -> None:
+    """Enforce Windows' fsync requirement even when this test runs on POSIX."""
+    import os
+
+    drive = source(tmp_path)
+    real_fsync = os.fsync
+
+    def writable_fsync(descriptor: int) -> None:
+        os.write(descriptor, b"")  # Read-only descriptors fail without changing file contents.
+        real_fsync(descriptor)
+
+    with patch("pipresent.loader.os.fsync", side_effect=writable_fsync):
+        media, config = import_content(drive, paths)
+    assert media.read_bytes() == b"video"
+    assert load_cached(paths) == (media, config)
+
+
+def test_sync_failure_preserves_cache(tmp_path: Path, paths: AppPaths) -> None:
+    drive = source(tmp_path)
+    previous = import_content(drive, paths)
+    (drive / "talk.mp4").write_bytes(b"new video")
+    with patch("pipresent.loader.os.fsync", side_effect=OSError("sync failed")):
+        with pytest.raises(OSError, match="sync failed"):
+            import_content(drive, paths)
+    assert load_cached(paths) == previous
+    assert len(list((paths.data / "imports").iterdir())) == 1

@@ -97,7 +97,8 @@ def import_content(source: Path, paths: AppPaths) -> tuple[Path, Config]:
             )
             select_content(stage)
             for item in stage.iterdir():
-                with item.open("rb") as handle:
+                # Windows requires a writable descriptor for fsync; r+b preserves content.
+                with item.open("r+b") as handle:
                     os.fsync(handle.fileno())
             stage.rename(target)
         pointer = paths.data / f".current-{generation}"
