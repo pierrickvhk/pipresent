@@ -1,7 +1,5 @@
 # PiPresent - Installatiehandleiding voor collega’s
 
-> Team- en rolloutdocumentatie voor het inzetten van PiPresent op Raspberry Pi-apparatuur voor digitale schermpresentaties.
-
 ## Doel
 PiPresent maakt een Raspberry Pi om tot een plug-and-play presentatiescherm. Op een USB-stick geplaatste presentaties worden automatisch geïmporteerd en fullscreen afgespeeld in een lus.
 
